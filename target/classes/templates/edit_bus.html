@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Bus Page</title>
+    <link
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+      body {
+        background-color: #2779e2;
+      }
+      .card {
+        box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.649);
+      }
+    </style>
+  </head>
+  <body>
+    <section class="vh-100" style="background-color: #2779e2;">
+      <div class="container h-100">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+          <div class="col-xl-9">
+            <h1 class="text-white mb-4" style="margin-top: 12px">Edit Bus</h1>
+            <div class="card" style="border-radius: 15px;">
+              <div class="card-body">
+                <div class="row d-flex justify-content-center align-items-center">
+                  <div class="col-md-6 col-md-offset-3">
+                    <form id="edit-Bus-form">
+                      <div class="form-group">
+                        <label for="busId">Bus ID</label>
+                        <input type="text" class="form-control" id="busId" />
+                      </div>
+                      <div class="form-group">
+                        <label for="busName">Bus Name</label>
+                        <input type="text" class="form-control" id="busName" />
+                      </div>
+                      <div class="form-group">
+                        <label for="from">From</label>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-default dropdown-toggle"
+                            type="button"
+                            id="fromDropdown"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                          >
+                            Select Station
+                          </button>
+                          <div class="dropdown-menu" aria-labelledby="fromDropdown">
+                            <a class="dropdown-item fromStation" href="#">Chennai</a>
+                            <a class="dropdown-item fromStation" href="#">Bangalore</a>
+                            <a class="dropdown-item fromStation" href="#">Delhi</a>
+                            <a class="dropdown-item fromStation" href="#">Mumbai</a>
+                            <a class="dropdown-item fromStation" href="#">Kerala</a>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="to">To</label>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-default dropdown-toggle"
+                            type="button"
+                            id="toDropdown"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                          >
+                            Select Station
+                          </button>
+                          <div class="dropdown-menu" aria-labelledby="toDropdown">
+                            <a class="dropdown-item toStation" href="#">Chennai</a>
+                            <a class="dropdown-item toStation" href="#">Bangalore</a>
+                            <a class="dropdown-item toStation" href="#">Delhi</a>
+                            <a class="dropdown-item toStation" href="#">Mumbai</a>
+                            <a class="dropdown-item toStation" href="#">Kerala</a>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="date">Date(DD/MM/YY)</label>
+                        <input type="date" class="form-control" id="date" />
+                      </div>
+                      <div class="form-group">
+                        <label for="time">Time (HH:MM)</label>
+                        <input type="time" class="form-control" id="time" name="time" />
+                      </div>
+                      <br />
+                      <button type="submit" class="btn btn-primary btn-block">
+                        Edit Bus
+                      </button>
+                    </form>
+                    <br />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const busIdInput = document.getElementById("busId");
+        const form = document.getElementById("edit-Bus-form");
+
+        $(".fromStation").click(function (event) {
+          event.preventDefault();
+          const selectedFrom = $(this).text();
+          $("#fromDropdown").text(selectedFrom);
+        });
+
+        $(".toStation").click(function (event) {
+          event.preventDefault();
+          const selectedTo = $(this).text();
+          $("#toDropdown").text(selectedTo);
+        });
+
+        function fetchBusDetails(busId) {
+          fetch(`/api/search-bus-by-id?busId=${busId}`)
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              if (data) {
+                const Bus = data;
+                document.getElementById("busName").value = Bus.busName;
+                document.getElementById("busId").value = Bus.busNumber;
+                $("#fromDropdown").text(Bus.source);
+                $("#toDropdown").text(Bus.destination);
+                document.getElementById("date").value = Bus.date
+                  .split("-")
+                  .reverse()
+                  .join("-");
+                document.getElementById("time").value = Bus.time
+                  ? Bus.time
+                  : "00:00";
+              } else {
+                alert("Bus not found");
+              }
+            })
+            .catch((error) =>
+              console.error("Error fetching bus details:", error)
+            );
+        }
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const busId = busIdInput.value;
+          const busName = document.getElementById("busName").value;
+          const from = $("#fromDropdown").text().trim();
+          const to = $("#toDropdown").text().trim();
+          const date = document
+            .getElementById("date")
+            .value.split("-")
+            .reverse()
+            .join("-");
+          const time = document.getElementById("time").value;
+
+          const queryParams = new URLSearchParams({
+            busNumber: busId,
+            busName: busName,
+            source: from,
+            destination: to,
+            date: date,
+            time: time,
+          });
+
+          fetch(`/api/edit-bus?${queryParams.toString()}`, {
+            method: "GET",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              if (data.status == 200) {
+                alert("Bus details updated successfully");
+                window.location.href = "admin_dashboard";
+              } else {
+                alert("Error updating bus details");
+              }
+            })
+            .catch((error) =>
+              console.error("Error updating bus details:", error)
+            );
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const busId = urlParams.get("busId");
+        if (busId) {
+          busIdInput.value = busId;
+          fetchBusDetails(busId);
+        }
+      });
+    </script>
+  </body>
+</html>
